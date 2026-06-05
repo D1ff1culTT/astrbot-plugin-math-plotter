@@ -53,6 +53,40 @@
 |------|------|------|
 | `/plot <eq>` | 隐式方程 F(x,y)=0 | `/plot x**2+y**2-1` (圆) |
 
+### 效果展示
+<img width="1213" height="733" alt="1297b393547e0392260b0066bed58521" src="https://github.com/user-attachments/assets/e5028793-eb9c-4965-b2d1-d47932e1c60c" />
+一元函数
+
+<img width="1012" height="654" alt="4a7c58a702bb717f42707c87d093e86f" src="https://github.com/user-attachments/assets/88b26bee-7adb-4667-a74f-01da0b390763" />
+多函数对比
+
+<img width="1200" height="1200" alt="891915fd3185a81b0eabcb056958048b" src="https://github.com/user-attachments/assets/2742fb17-0e32-4f38-a9e0-139f757ca87f" />
+极坐标
+
+<img width="1213" height="733" alt="5b8efffef922c30d5fdd7d8ac9b954a7" src="https://github.com/user-attachments/assets/74179a60-af30-474e-b768-a9031da342a1" />
+参数方程
+
+<img width="952" height="654" alt="ada15501d8daaceb181017b2046574db" src="https://github.com/user-attachments/assets/7952d3a3-ccfa-44b6-829d-b07dc173617c" />
+二维矢量场
+
+<img width="1440" height="1080" alt="059de18487ffd813a3e73de9727ef967" src="https://github.com/user-attachments/assets/c7569a2c-d2d2-44c3-9361-f6e2bf31d271" />
+三维曲面
+
+<img width="1440" height="1080" alt="c0b1b82988c9035c0ffa33fe4cd232cc" src="https://github.com/user-attachments/assets/2edb0813-5721-4278-bc64-d903429b4fa3" />
+多曲面叠加
+
+<img width="1440" height="1080" alt="b69399ea266fcd26aea58c1ffbdc132c" src="https://github.com/user-attachments/assets/52385385-89c1-46ce-bd0a-b3c937b9236c" />
+球坐标曲面
+
+<img width="1440" height="1080" alt="df003cb8ec8d78be443481eb6e2245a6" src="https://github.com/user-attachments/assets/dabe19bd-7cad-4a99-8c60-f1dd36ccd160" />
+三维参数曲线
+
+<img width="1440" height="1080" alt="0b7ee812123473c3e08b87663bd52c7e" src="https://github.com/user-attachments/assets/14f33675-228f-458e-9936-e4cb0520ff89" />
+隐式3D曲面
+
+<img width="1440" height="1080" alt="a6a2ffec00b07e691d521e23a04b8f5f" src="https://github.com/user-attachments/assets/cba6e471-5cc8-481c-8bc6-9e65f08ac2a8" />
+隐式方程
+
 ## 支持的数学函数与常量
 
 `sin`, `cos`, `tan`, `exp`, `log`, `sqrt`, `abs`, `max`, `min`, `Heaviside`, `sign`, `Piecewise`, `pi`, `E`, `e`, `Max`, `Min`
