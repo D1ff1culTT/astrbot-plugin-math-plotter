@@ -1,0 +1,62 @@
+{
+  "plot_dpi": {
+    "description": "图像分辨率 (DPI)",
+    "type": "int",
+    "default": 120,
+    "hint": "生成图像的清晰度，数值越高图片越清晰但文件越大。建议 100-200。"
+  },
+  "default_x_range": {
+    "description": "默认 x 轴范围",
+    "type": "string",
+    "default": "-10,10",
+    "hint": "当 AI 未指定 x 范围时的默认值，格式：最小值,最大值。例如 -10,10"
+  },
+  "line_width": {
+    "description": "曲线线宽",
+    "type": "float",
+    "default": 2.0,
+    "hint": "绘制曲线的粗细，建议 1.5-3.0。"
+  },
+  "grid_alpha": {
+    "description": "网格透明度",
+    "type": "float",
+    "default": 0.3,
+    "hint": "背景网格的透明度，0 为完全透明，1 为完全不透明。"
+  },
+  "plot_3d_grid_density": {
+    "description": "3D 曲面网格密度",
+    "type": "int",
+    "default": 200,
+    "hint": "3D 曲面图每个轴上的采样点数，数值越高曲面越平滑但绘制越慢。建议 100-400。"
+  },
+  "plot_3d_cmap": {
+    "description": "3D 曲面配色方案",
+    "type": "string",
+    "default": "viridis",
+    "hint": "matplotlib 的 colormap 名称。如 viridis、plasma、inferno、coolwarm、rainbow 等。"
+  },
+  "plot_3d_alpha": {
+    "description": "3D 曲面透明度",
+    "type": "float",
+    "default": 0.88,
+    "hint": "3D 曲面的透明度，0 为完全透明，1 为完全不透明。建议 0.8-1.0。"
+  },
+  "plot_3d_contour_offset": {
+    "description": "是否在底面投影等值线",
+    "type": "bool",
+    "default": true,
+    "hint": "在 3D 曲面底部投影等高线，帮助判断曲面坡度变化。"
+  },
+  "plot_3d_elev": {
+    "description": "3D 视图仰角（度）",
+    "type": "int",
+    "default": 25,
+    "hint": "3D 曲面图的相机仰角，0 为水平视角，90 为俯视。"
+  },
+  "plot_3d_azim": {
+    "description": "3D 视图方位角（度）",
+    "type": "int",
+    "default": -60,
+    "hint": "3D 曲面图的相机方位角，0 为正东方向，-90 为正南方向。"
+  }
+}
