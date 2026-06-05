@@ -1052,7 +1052,7 @@ class MathPlotter(Star):
     #  指令：手动测试
     # ═══════════════════════════════════════════════════
 
-    @filter.command("plot")
+    @filter.command("plot", desc="绘制一元函数图像 y=f(x)，支持隐式方程 F(x,y)=0 和多函数对比")
     async def cmd_plot(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/plot", "plot"):
@@ -1065,7 +1065,7 @@ class MathPlotter(Star):
         else:
             yield await self.tool_plot_function(event, expression=expr_str)
 
-    @filter.command("plot_status")
+    @filter.command("plot_status", desc="查看数学绘图插件状态（缓存图像数、占用空间、DPI等）")
     async def cmd_plot_status(self, event: AstrMessageEvent):
         import os as _os
         files = [f for f in _os.listdir(PLOTS_DIR) if f.endswith(".png")]
@@ -1077,7 +1077,7 @@ class MathPlotter(Star):
             f"📏 默认范围：{self._get_config('default_x_range', '-10,10')}"
         )
 
-    @filter.command("plot3d")
+    @filter.command("plot3d", desc="绘制三维曲面 z=f(x,y)（plotly 交互式渲染）")
     async def cmd_plot3d(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/plot3d", "plot3d"):
@@ -1087,7 +1087,7 @@ class MathPlotter(Star):
             return
         yield await self.tool_plot_3d_function(event, expression=expr_str)
 
-    @filter.command("polar")
+    @filter.command("polar", desc="绘制极坐标图像 r=f(θ)")
     async def cmd_polar(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/polar", "polar"):
@@ -1097,7 +1097,7 @@ class MathPlotter(Star):
             return
         yield await self.tool_plot_polar(event, expression=expr_str)
 
-    @filter.command("parametric")
+    @filter.command("parametric", desc="绘制二维参数方程图像 (x(t), y(t))")
     async def cmd_parametric(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/parametric", "parametric"):
@@ -1108,7 +1108,7 @@ class MathPlotter(Star):
         parts = expr_str.split(",", 1)
         yield await self.tool_plot_parametric(event, x_expression=parts[0].strip(), y_expression=parts[1].strip())
 
-    @filter.command("spherical")
+    @filter.command("spherical", desc="绘制球坐标曲面 r=f(θ,φ)")
     async def cmd_spherical(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/spherical", "spherical"):
@@ -1119,7 +1119,7 @@ class MathPlotter(Star):
             return
         yield await self.tool_plot_3d_spherical(event, expression=expr_str)
 
-    @filter.command("vector2d")
+    @filter.command("vector2d", desc="绘制二维矢量场 F=(Fx, Fy)")
     async def cmd_vector2d(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/vector2d", "vector2d"):
@@ -1132,7 +1132,7 @@ class MathPlotter(Star):
         yield await self.tool_plot_vector_field_2d(
             event, x_expression=parts[0].strip(), y_expression=parts[1].strip())
 
-    @filter.command("plot3dm")
+    @filter.command("plot3dm", desc="绘制多个三维曲面叠加对比")
     async def cmd_plot3dm(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/plot3dm", "plot3dm"):
@@ -1143,7 +1143,7 @@ class MathPlotter(Star):
             return
         yield await self.tool_plot_3d_multiple(event, expressions=expr_str)
 
-    @filter.command("implicit3d")
+    @filter.command("implicit3d", desc="绘制隐式三维曲面 F(x,y,z)=0")
     async def cmd_implicit3d(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/implicit3d", "implicit3d"):
@@ -1154,7 +1154,7 @@ class MathPlotter(Star):
             return
         yield await self.tool_plot_implicit_3d(event, equation=expr_str)
 
-    @filter.command("parametric3d")
+    @filter.command("parametric3d", desc="绘制三维参数曲线 (x(t), y(t), z(t))")
     async def cmd_parametric3d(self, event: AstrMessageEvent):
         expr_str = event.message_str.strip()
         for prefix in ("/parametric3d", "parametric3d"):
