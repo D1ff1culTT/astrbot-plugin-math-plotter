@@ -1,6 +1,6 @@
 name: astrbot_plugin_math_plotter
 display_name: 数学函数绘图器
 desc: AI 辅导学习时自动调用，将数学方程、函数公式绘制为图像。支持一元函数、多函数对比、隐式方程、三维曲面、极坐标、参数方程、球坐标曲面、矢量场、隐式3D曲面等 11 种坐标系/绘图模式。
-version: v1.0.0
+version: v1.1.0
 author: D1ff1culTT
 repo: https://github.com/D1ff1culTT/astrbot_plugin_math_plotter
