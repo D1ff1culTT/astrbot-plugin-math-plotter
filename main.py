@@ -132,6 +132,208 @@ class MathPlotter(Star):
             type="tool_direct_result",
         ))
 
+    # ── 向量绘图辅助方法 ──
+
+    @staticmethod
+    def _parse_point(s: str):
+        """解析 "(x,y)" 或 "x,y" 格式的二维坐标，返回 (x, y)。"""
+        s = s.strip().lstrip("(").rstrip(")").strip()
+        parts = s.split(",")
+        if len(parts) != 2:
+            raise ValueError(f"无法解析坐标: {s}")
+        return float(parts[0].strip()), float(parts[1].strip())
+
+    @staticmethod
+    def _parse_point_3d(s: str):
+        """解析 "(x,y,z)" 或 "x,y,z" 格式的三维坐标，返回 (x, y, z)。"""
+        s = s.strip().lstrip("(").rstrip(")").strip()
+        parts = s.split(",")
+        if len(parts) != 3:
+            raise ValueError(f"无法解析三维坐标: {s}")
+        return float(parts[0].strip()), float(parts[1].strip()), float(parts[2].strip())
+
+    @staticmethod
+    def _parse_vector_def(def_str: str):
+        """解析单个向量定义字符串。
+
+        支持格式：
+            "x,y"                     → 从原点出发
+            "(x1,y1)->(x2,y2)"       → 指定起终点
+            "x1,y1->x2,y2"           → 同上（无括号）
+        可附加 :颜色 :标签，如 "0,0->3,4:red:v1"
+        返回 dict: {start, end, color, label}
+        """
+        s = def_str.strip()
+        color = "#2196F3"
+        label = ""
+        # 按 ":" 分割（颜色和标签可选）
+        if ":" in s:
+            parts = s.split(":")
+            s = parts[0].strip()
+            extras = [p.strip() for p in parts[1:]]
+            # 颜色：英文名或 #hex
+            _named = {
+                "红": "#F44336", "red": "#F44336",
+                "蓝": "#2196F3", "blue": "#2196F3",
+                "绿": "#4CAF50", "green": "#4CAF50",
+                "橙": "#FF9800", "orange": "#FF9800",
+                "紫": "#9C27B0", "purple": "#9C27B0",
+                "灰": "#9E9E9E", "gray": "#9E9E9E",
+                "黑": "#000000", "black": "#000000",
+            }
+            for ext in extras:
+                if ext.lower() in _named:
+                    color = _named[ext.lower()]
+                elif ext.startswith("#") or ext in (
+                    "red", "blue", "green", "orange", "purple", "gray", "black",
+                    "cyan", "magenta", "yellow", "brown", "pink", "lime",
+                ):
+                    color = ext
+                else:
+                    label = ext  # 非颜色的视为标签
+        # 解析坐标
+        if "->" in s:
+            start_str, end_str = s.split("->")
+        else:
+            start_str, end_str = "0,0", s
+        start = MathPlotter._parse_point(start_str)
+        end = MathPlotter._parse_point(end_str)
+        return {"start": start, "end": end, "color": color, "label": label}
+
+    @staticmethod
+    def _parse_vector_def_3d(def_str: str):
+        """解析三维向量定义字符串，格式类似二维但坐标为 (x,y,z)。"""
+        s = def_str.strip()
+        color = "#2196F3"
+        label = ""
+        if ":" in s:
+            parts = s.split(":")
+            s = parts[0].strip()
+            extras = [p.strip() for p in parts[1:]]
+            _named = {
+                "红": "#F44336", "red": "#F44336",
+                "蓝": "#2196F3", "blue": "#2196F3",
+                "绿": "#4CAF50", "green": "#4CAF50",
+                "橙": "#FF9800", "orange": "#FF9800",
+                "紫": "#9C27B0", "purple": "#9C27B0",
+                "灰": "#9E9E9E", "gray": "#9E9E9E",
+            }
+            for ext in extras:
+                if ext.lower() in _named:
+                    color = _named[ext.lower()]
+                elif ext.startswith("#") or ext in (
+                    "red", "blue", "green", "orange", "purple", "gray", "black",
+                    "cyan", "magenta", "yellow",
+                ):
+                    color = ext
+                else:
+                    label = ext
+        if "->" in s:
+            start_str, end_str = s.split("->")
+        else:
+            start_str, end_str = "0,0,0", s
+        start = MathPlotter._parse_point_3d(start_str)
+        end = MathPlotter._parse_point_3d(end_str)
+        return {"start": start, "end": end, "color": color, "label": label}
+
+    def _draw_2d_arrow(self, ax, start, end, color: str, lw: float,
+                        label: str = "", label_offset=(0, 0)):
+        """在 ax 上绘制一个带实心三角箭头的向量。
+
+        Args:
+            ax: matplotlib Axes
+            start: (x, y) 起点
+            end: (x, y) 终点
+            color: 颜色
+            lw: 线宽
+            label: 标签文字
+            label_offset: 标签相对于终点的 (dx, dy) 偏移（数据坐标）
+        """
+        from matplotlib.patches import FancyArrowPatch
+        arrow = FancyArrowPatch(
+            start, end,
+            arrowstyle="-|>", mutation_scale=18,
+            color=color, linewidth=lw, zorder=4,
+        )
+        ax.add_patch(arrow)
+        if label:
+            # 默认偏移：沿向量方向外推一小段
+            dx = end[0] - start[0]
+            dy = end[1] - start[1]
+            vec_len = np.sqrt(dx ** 2 + dy ** 2)
+            if vec_len > 1e-6:
+                # 标签放在终点外侧 8% 处，再加用户指定的偏移
+                default_off_x = dx / vec_len * 0.3
+                default_off_y = dy / vec_len * 0.3
+            else:
+                default_off_x, default_off_y = 0.3, 0.3
+            lx = end[0] + default_off_x + label_offset[0]
+            ly = end[1] + default_off_y + label_offset[1]
+            ax.annotate(
+                label, xy=end, xytext=(lx, ly),
+                fontsize=10, color=color, fontweight="bold",
+                bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.7),
+                zorder=5,
+            )
+
+    @staticmethod
+    def _render_3d_vectors(vector_list: list, title: str, dpi: int,
+                            xlabel: str = "x", ylabel: str = "y", zlabel: str = "z") -> str:
+        """用 plotly 渲染三维向量图。每个向量用线段 + 末端锥体箭头表示。
+
+        Args:
+            vector_list: list of dict，每个含 start, end, color, label
+            title: 图表标题
+            dpi: 分辨率
+            xlabel, ylabel, zlabel: 轴标签
+        Returns: 文件路径
+        """
+        import plotly.graph_objects as go
+
+        traces = []
+        for v in vector_list:
+            sx, sy, sz = v["start"]
+            ex, ey, ez = v["end"]
+            dx, dy, dz = ex - sx, ey - sy, ez - sz
+            name = v.get("label", "")
+
+            # 线段
+            traces.append(go.Scatter3d(
+                x=[sx, ex], y=[sy, ey], z=[sz, ez],
+                mode="lines",
+                line=dict(color=v["color"], width=5),
+                name=name,
+                showlegend=bool(name),
+            ))
+            # 末端锥体箭头
+            mag = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+            if mag > 1e-8:
+                traces.append(go.Cone(
+                    x=[ex], y=[ey], z=[ez],
+                    u=[dx / mag], v=[dy / mag], w=[dz / mag],
+                    sizemode="absolute", sizeref=0.35,
+                    showscale=False,
+                    colorscale=[[0, v["color"]], [1, v["color"]]],
+                    anchor="tip",
+                    name="",
+                    showlegend=False,
+                ))
+
+        fig = go.Figure(data=traces)
+        fig.update_layout(
+            title=title,
+            scene=dict(
+                xaxis_title=xlabel, yaxis_title=ylabel, zaxis_title=zlabel,
+                aspectmode="data",
+            ),
+            width=1200, height=900,
+            margin=dict(l=10, r=10, t=60, b=10),
+        )
+        filename = f"plot_{uuid.uuid4().hex[:8]}.png"
+        filepath = os.path.join(PLOTS_DIR, filename)
+        fig.write_image(filepath, scale=dpi / 100)
+        return filepath
+
     # ═══════════════════════════════════════════════════
     #  LLM 工具 #1：一元函数 y = f(x)
     # ═══════════════════════════════════════════════════
@@ -1046,6 +1248,373 @@ class MathPlotter(Star):
         except Exception as e:
             logger.error(f"3D 参数曲线绘图失败: {e}")
             return f"❌ 绘制 3D 参数曲线时出错: {e}"
+
+
+    # ═══════════════════════════════════════════════════
+    #  LLM 工具 #12：二维向量图
+    # ═══════════════════════════════════════════════════
+
+    @filter.llm_tool(name="plot_vector_2d")
+    async def tool_plot_vector_2d(
+        self, event: AstrMessageEvent,
+        vectors: str, title: str = "",
+        xlabel: str = "", ylabel: str = "",
+    ) -> MessageEventResult:
+        """绘制二维向量示意图。每个向量用带实心三角箭头的线段表示（箭头在终点）。
+
+        Args:
+            vectors(string): 向量定义，多个向量用英文分号 ";" 分隔。每个向量格式：
+                "x,y :颜色:标签" → 从原点出发
+                "(x1,y1)->(x2,y2) :颜色:标签" → 指定起终点
+                例："3,4:red:v1 ; 0,0->2,3:blue:v2"
+            title(string): 图表标题，留空自动生成
+            xlabel(string): x 轴标签，留空默认 "x"
+            ylabel(string): y 轴标签，留空默认 "y"
+        """
+        try:
+            vector_list = [v.strip() for v in vectors.split(";") if v.strip()]
+            if not vector_list:
+                return "❌ 请提供至少一个向量定义。例如 vectors=\"3,4\""
+
+            fig, ax = self._make_figure()
+            lw = self._get_config("line_width", 2.0)
+            all_x, all_y = [], []
+
+            for vec_str in vector_list:
+                vd = self._parse_vector_def(vec_str)
+                self._draw_2d_arrow(ax, vd["start"], vd["end"], vd["color"], lw, vd["label"])
+                all_x.extend([vd["start"][0], vd["end"][0]])
+                all_y.extend([vd["start"][1], vd["end"][1]])
+
+            self._style_axes(ax)
+            if xlabel: ax.set_xlabel(xlabel)
+            if ylabel: ax.set_ylabel(ylabel)
+            ax.set_title(title or "二维向量图", fontsize=14)
+            margin = max(max(all_x) - min(all_x), max(all_y) - min(all_y), 4) * 0.2 + 1
+            ax.set_xlim(min(all_x) - margin, max(all_x) + margin)
+            ax.set_ylim(min(all_y) - margin, max(all_y) + margin)
+            ax.set_aspect("equal")
+
+            filepath = self._save_and_close(fig)
+            description = f"📐 已绘制二维向量图（{len(vector_list)} 个向量）。"
+            await self._send_result(event, description, filepath)
+            return description
+        except ValueError as e:
+            return f"❌ 向量格式错误: {e}"
+        except Exception as e:
+            logger.error(f"二维向量绘图失败: {e}")
+            return f"❌ 绘制二维向量图时出错: {e}"
+
+    # ═══════════════════════════════════════════════════
+    #  LLM 工具 #13：三维向量图
+    # ═══════════════════════════════════════════════════
+
+    @filter.llm_tool(name="plot_vector_3d")
+    async def tool_plot_vector_3d(
+        self, event: AstrMessageEvent,
+        vectors: str, title: str = "",
+        xlabel: str = "", ylabel: str = "", zlabel: str = "",
+    ) -> MessageEventResult:
+        """绘制三维向量示意图。每个向量用线段 + 末端锥体箭头表示。
+
+        Args:
+            vectors(string): 向量定义，多个向量用英文分号 ";" 分隔。格式：
+                "x,y,z :颜色:标签" → 从原点出发
+                "(x1,y1,z1)->(x2,y2,z2) :颜色:标签" → 指定起终点
+                例："1,2,3:red:v1 ; 0,0,0->3,4,1:blue:v2"
+            title(string): 图表标题
+            xlabel(string): x 轴标签，留空默认 "x"
+            ylabel(string): y 轴标签，留空默认 "y"
+            zlabel(string): z 轴标签，留空默认 "z"
+        """
+        try:
+            vector_list = [v.strip() for v in vectors.split(";") if v.strip()]
+            if not vector_list:
+                return "❌ 请提供至少一个三维向量定义。"
+
+            parsed = [self._parse_vector_def_3d(v) for v in vector_list]
+            dpi = self._get_config("plot_dpi", 120)
+            plot_title = title or "三维向量图"
+
+            filepath = self._render_3d_vectors(
+                parsed, plot_title, dpi,
+                xlabel=xlabel or "x", ylabel=ylabel or "y", zlabel=zlabel or "z",
+            )
+            description = f"📐 已绘制三维向量图（{len(parsed)} 个向量）。"
+            await self._send_result(event, description, filepath)
+            return description
+        except ValueError as e:
+            return f"❌ 向量格式错误: {e}"
+        except Exception as e:
+            logger.error(f"三维向量绘图失败: {e}")
+            return f"❌ 绘制三维向量图时出错: {e}"
+
+    # ═══════════════════════════════════════════════════
+    #  LLM 工具 #14：向量加法演示（平行四边形法则）
+    # ═══════════════════════════════════════════════════
+
+    @filter.llm_tool(name="plot_vector_addition")
+    async def tool_plot_vector_addition(
+        self, event: AstrMessageEvent,
+        v1: str, v2: str, title: str = "",
+        xlabel: str = "", ylabel: str = "",
+    ) -> MessageEventResult:
+        """演示向量加法 v1 + v2，用平行四边形法则显示结果向量。
+
+        Args:
+            v1(string): 第一个向量分量，格式 "x,y"。例如 "1,2"
+            v2(string): 第二个向量分量，格式 "x,y"。例如 "3,1"
+            title(string): 图表标题，留空自动生成
+            xlabel(string): x 轴标签
+            ylabel(string): y 轴标签
+        """
+        try:
+            p_v1 = self._parse_point(v1)
+            p_v2 = self._parse_point(v2)
+            v1x, v1y = p_v1
+            v2x, v2y = p_v2
+            # 结果向量
+            rx, ry = v1x + v2x, v1y + v2y
+
+            fig, ax = self._make_figure()
+            lw = self._get_config("line_width", 2.0)
+
+            # v1（蓝）
+            self._draw_2d_arrow(ax, (0, 0), (v1x, v1y), "#2196F3", lw,
+                                f"v₁=({v1x},{v1y})", (0.12, -0.12))
+            # v2（红）
+            self._draw_2d_arrow(ax, (0, 0), (v2x, v2y), "#F44336", lw,
+                                f"v₂=({v2x},{v2y})", (0.12, -0.12))
+            # 平行四边形辅助线（虚线）：从 v1 终点平移 v2，从 v2 终点平移 v1
+            ax.plot([v1x, rx], [v1y, ry], linestyle="--", linewidth=1.2,
+                    color="#9E9E9E", zorder=2)
+            ax.plot([v2x, rx], [v2y, ry], linestyle="--", linewidth=1.2,
+                    color="#9E9E9E", zorder=2)
+            # 结果向量 v1+v2（绿）
+            self._draw_2d_arrow(ax, (0, 0), (rx, ry), "#4CAF50", lw + 1,
+                                f"v₁+v₂=({rx},{ry})", (0.15, -0.15))
+
+            self._style_axes(ax)
+            if xlabel: ax.set_xlabel(xlabel)
+            if ylabel: ax.set_ylabel(ylabel)
+            ax.set_title(title or f"向量加法: v₁+v₂ = ({rx},{ry})", fontsize=14)
+            all_vals = [0, v1x, v2x, rx, v1y, v2y, ry]
+            rng = max(abs(v) for v in all_vals) * 1.3 + 1
+            ax.set_xlim(-rng * 0.05, rng)
+            ax.set_ylim(-rng * 0.05, rng)
+            ax.set_aspect("equal")
+
+            filepath = self._save_and_close(fig)
+            description = f"📐 已绘制向量加法演示：v₁=({v1x},{v1y}) + v₂=({v2x},{v2y}) = ({rx},{ry})。"
+            await self._send_result(event, description, filepath)
+            return description
+        except ValueError as e:
+            return f"❌ 向量格式错误: {e}"
+        except Exception as e:
+            logger.error(f"向量加法绘图失败: {e}")
+            return f"❌ 绘制向量加法时出错: {e}"
+
+    # ═══════════════════════════════════════════════════
+    #  LLM 工具 #15：向量数乘演示
+    # ═══════════════════════════════════════════════════
+
+    @filter.llm_tool(name="plot_vector_scaling")
+    async def tool_plot_vector_scaling(
+        self, event: AstrMessageEvent,
+        vector: str, scalar: float = 2.0, title: str = "",
+        xlabel: str = "", ylabel: str = "",
+    ) -> MessageEventResult:
+        """演示向量数乘 k·v，同时显示原向量和缩放后的向量（颜色区分）。
+
+        Args:
+            vector(string): 向量分量，格式 "x,y"。例如 "1,3"
+            scalar(number): 标量 k，默认 2.0。支持负数（反向）、小数（缩短）
+            title(string): 图表标题
+            xlabel(string): x 轴标签
+            ylabel(string): y 轴标签
+        """
+        try:
+            px, py = self._parse_point(vector)
+            k = float(scalar)
+            sx, sy = k * px, k * py
+
+            fig, ax = self._make_figure()
+            lw = self._get_config("line_width", 2.0)
+
+            # 原向量（灰色虚线 + 实心箭）
+            self._draw_2d_arrow(ax, (0, 0), (px, py), "#9E9E9E", lw,
+                                f"v=({px},{py})", (0.12, -0.12))
+            # 缩放后向量（橙/紫色）
+            sc_color = "#FF9800" if k >= 0 else "#9C27B0"
+            self._draw_2d_arrow(ax, (0, 0), (sx, sy), sc_color, lw + 1,
+                                f"{k}v=({sx:.1f},{sy:.1f})", (0.15, -0.15))
+
+            self._style_axes(ax)
+            if xlabel: ax.set_xlabel(xlabel)
+            if ylabel: ax.set_ylabel(ylabel)
+            ax.set_title(title or f"向量数乘: {k}·v = ({sx:.1f},{sy:.1f})", fontsize=14)
+            all_vals = [0, px, sx, py, sy]
+            rng = max(abs(v) for v in all_vals) * 1.3 + 1
+            ax.set_xlim(-rng * 0.05, rng)
+            ax.set_ylim(-rng * 0.05, rng)
+            ax.set_aspect("equal")
+
+            filepath = self._save_and_close(fig)
+            description = f"📐 已绘制向量数乘演示：{k}·v = ({sx:.1f},{sy:.1f})。"
+            await self._send_result(event, description, filepath)
+            return description
+        except ValueError as e:
+            return f"❌ 向量格式错误: {e}"
+        except Exception as e:
+            logger.error(f"向量数乘绘图失败: {e}")
+            return f"❌ 绘制向量数乘时出错: {e}"
+
+    # ═══════════════════════════════════════════════════
+    #  LLM 工具 #16：基变换演示
+    # ═══════════════════════════════════════════════════
+
+    @filter.llm_tool(name="plot_basis_transform")
+    async def tool_plot_basis_transform(
+        self, event: AstrMessageEvent,
+        new_basis: str, title: str = "",
+        xlabel: str = "", ylabel: str = "",
+    ) -> MessageEventResult:
+        """演示基变换：在同一坐标系中显示标准基向量 e₁,e₂ 和一组新基向量。
+
+        Args:
+            new_basis(string): 新基向量，格式 "(b1x,b1y),(b2x,b2y)"。
+                例："(1,1),(1,-1)" 表示新基 b₁=(1,1), b₂=(1,-1)
+            title(string): 图表标题
+            xlabel(string): x 轴标签
+            ylabel(string): y 轴标签
+        """
+        try:
+            s = new_basis.strip()
+            # 匹配 (a,b),(c,d) 格式
+            pattern = r"\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)"
+            matches = re.findall(pattern, s)
+            if len(matches) != 2:
+                return "❌ 请提供两个基向量，格式: \"(b1x,b1y),(b2x,b2y)\"。例: \"(1,1),(1,-1)\""
+            b1 = (float(matches[0][0]), float(matches[0][1]))
+            b2 = (float(matches[1][0]), float(matches[1][1]))
+
+            fig, ax = self._make_figure()
+            lw = self._get_config("line_width", 2.0)
+
+            # 标准基 e1, e2（灰色）
+            self._draw_2d_arrow(ax, (0, 0), (1, 0), "#9E9E9E", lw,
+                                "e₁=(1,0)", (-0.1, -0.25))
+            self._draw_2d_arrow(ax, (0, 0), (0, 1), "#9E9E9E", lw,
+                                "e₂=(0,1)", (-0.35, -0.05))
+            # 新基 b1（红）, b2（蓝）
+            self._draw_2d_arrow(ax, (0, 0), b1, "#F44336", lw + 1,
+                                f"b₁=({b1[0]},{b1[1]})", (0.12, -0.15))
+            self._draw_2d_arrow(ax, (0, 0), b2, "#2196F3", lw + 1,
+                                f"b₂=({b2[0]},{b2[1]})", (0.12, -0.15))
+
+            self._style_axes(ax)
+            if xlabel: ax.set_xlabel(xlabel)
+            if ylabel: ax.set_ylabel(ylabel)
+            ax.set_title(title or f"基变换: 标准基 → b₁=({b1[0]},{b1[1]}), b₂=({b2[0]},{b2[1]})", fontsize=14)
+            all_vals = [0, 1, b1[0], b2[0], b1[1], b2[1]]
+            rng = max(abs(v) for v in all_vals) * 1.3 + 1
+            ax.set_xlim(-rng * 0.05, rng)
+            ax.set_ylim(-rng * 0.05, rng)
+            ax.set_aspect("equal")
+
+            filepath = self._save_and_close(fig)
+            description = (f"📐 已绘制基变换演示：标准基 e₁=(1,0), e₂=(0,1) "
+                           f"→ 新基 b₁=({b1[0]},{b1[1]}), b₂=({b2[0]},{b2[1]})。")
+            await self._send_result(event, description, filepath)
+            return description
+        except ValueError as e:
+            return f"❌ 基向量格式错误: {e}"
+        except Exception as e:
+            logger.error(f"基变换绘图失败: {e}")
+            return f"❌ 绘制基变换时出错: {e}"
+
+    # ═══════════════════════════════════════════════════
+    #  指令：向量绘图
+    # ═══════════════════════════════════════════════════
+
+    @filter.command("vector", desc="绘制二维向量示意图（支持多向量、自定义颜色和标签）")
+    async def cmd_vector(self, event: AstrMessageEvent):
+        expr_str = event.message_str.strip()
+        for prefix in ("/vector", "vector"):
+            expr_str = expr_str.replace(prefix, "", 1).strip()
+        if not expr_str:
+            yield event.plain_result(
+                "用法：/vector <向量定义>[; <向量定义> ...]\n"
+                "格式：\"x,y:颜色:标签\" 或 \"(x1,y1)->(x2,y2):颜色:标签\"\n"
+                "例如：/vector 3,4:red:v1 ; 0,0->2,3:blue:v2")
+            return
+        yield await self.tool_plot_vector_2d(event, vectors=expr_str)
+
+    @filter.command("vector3d", desc="绘制三维向量示意图（线段+末端锥体箭头）")
+    async def cmd_vector3d(self, event: AstrMessageEvent):
+        expr_str = event.message_str.strip()
+        for prefix in ("/vector3d", "vector3d"):
+            expr_str = expr_str.replace(prefix, "", 1).strip()
+        if not expr_str:
+            yield event.plain_result(
+                "用法：/vector3d <向量定义>[; <向量定义> ...]\n"
+                "格式：\"x,y,z:颜色:标签\" 或 \"(x1,y1,z1)->(x2,y2,z2):颜色:标签\"\n"
+                "例如：/vector3d 1,2,3:red ; 0,0,0->3,4,1:blue")
+            return
+        yield await self.tool_plot_vector_3d(event, vectors=expr_str)
+
+    @filter.command("vector_add", desc="演示向量加法（平行四边形法则，显示结果向量）")
+    async def cmd_vector_add(self, event: AstrMessageEvent):
+        expr_str = event.message_str.strip()
+        for prefix in ("/vector_add", "vector_add"):
+            expr_str = expr_str.replace(prefix, "", 1).strip()
+        if not expr_str or "+" not in expr_str:
+            yield event.plain_result(
+                "用法：/vector_add <v1> + <v2>\n"
+                "例如：/vector_add 1,2 + 3,1")
+            return
+        parts = expr_str.split("+")
+        if len(parts) != 2:
+            yield event.plain_result("用法：/vector_add <v1> + <v2>\n例如：/vector_add 1,2 + 3,1")
+            return
+        yield await self.tool_plot_vector_addition(
+            event, v1=parts[0].strip(), v2=parts[1].strip())
+
+    @filter.command("vector_scale", desc="演示向量数乘 k·v（颜色区分原向量和缩放向量）")
+    async def cmd_vector_scale(self, event: AstrMessageEvent):
+        expr_str = event.message_str.strip()
+        for prefix in ("/vector_scale", "vector_scale"):
+            expr_str = expr_str.replace(prefix, "", 1).strip()
+        if not expr_str or "*" not in expr_str:
+            yield event.plain_result(
+                "用法：/vector_scale <k> * <向量>\n"
+                "例如：/vector_scale 2 * 1,3\n"
+                "     /vector_scale -0.5 * 4,2")
+            return
+        parts = expr_str.split("*", 1)
+        if len(parts) != 2:
+            yield event.plain_result("用法：/vector_scale <k> * <向量>\n例如：/vector_scale 2 * 1,3")
+            return
+        try:
+            k = float(parts[0].strip())
+        except ValueError:
+            yield event.plain_result("❌ 标量 k 必须是数字。")
+            return
+        yield await self.tool_plot_vector_scaling(
+            event, vector=parts[1].strip(), scalar=k)
+
+    @filter.command("basis", desc="演示基变换（标准基 vs 新基在同一坐标系中）")
+    async def cmd_basis(self, event: AstrMessageEvent):
+        expr_str = event.message_str.strip()
+        for prefix in ("/basis", "basis"):
+            expr_str = expr_str.replace(prefix, "", 1).strip()
+        if not expr_str:
+            yield event.plain_result(
+                "用法：/basis <(b1x,b1y),(b2x,b2y)>\n"
+                "例如：/basis (1,1),(1,-1)\n"
+                "     /basis (2,0),(0,3)")
+            return
+        yield await self.tool_plot_basis_transform(event, new_basis=expr_str)
 
 
     # ═══════════════════════════════════════════════════
