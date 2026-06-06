@@ -101,6 +101,21 @@
 <img width="1440" height="1080" alt="a6a2ffec00b07e691d521e23a04b8f5f" src="https://github.com/user-attachments/assets/cba6e471-5cc8-481c-8bc6-9e65f08ac2a8" />
 隐式方程
 
+<img width="654" height="733" alt="f9f0116c5a47ccd9027ad90368dd614b" src="https://github.com/user-attachments/assets/00786e05-0851-4678-b28a-60a3e70b4501" />
+二维向量图
+
+<img width="1440" height="1080" alt="9d470bc8b949e60bc3dfb2089927d2c6" src="https://github.com/user-attachments/assets/9187bcbe-ed57-46a8-846f-c02c9c170222" />
+三维向量图
+
+<img width="861" height="733" alt="eb6a2e7ffd41ad4a14ada13c5e4316e2" src="https://github.com/user-attachments/assets/30008a37-e54c-4e76-a234-6a9f19403692" />
+向量加法
+
+<img width="501" height="733" alt="eea368532bf7f5a884c2576367e7df64" src="https://github.com/user-attachments/assets/db168a6e-685a-4ba1-a8c6-a3473c55a863" />
+向量数乘
+
+<img width="553" height="733" alt="5e9bad0e0c8256a14deda5936658c6e3" src="https://github.com/user-attachments/assets/342ab53d-ba4d-4ef7-b18d-811a51132740" />
+基变换
+
 ## 支持的数学函数与常量
 
 `sin`, `cos`, `tan`, `exp`, `log`, `sqrt`, `abs`, `max`, `min`, `Heaviside`, `sign`, `Piecewise`, `pi`, `E`, `e`, `Max`, `Min`
