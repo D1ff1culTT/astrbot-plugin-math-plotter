@@ -132,6 +132,23 @@ class MathPlotter(Star):
             type="tool_direct_result",
         ))
 
+    # ── 文本清洗：将 Unicode 上下标转为纯文本，避免 matplotlib 字体缺字 ──
+
+    @staticmethod
+    def _sanitize_math_text(s: str) -> str:
+        """将 Unicode 数学下标/上标替换为普通 ASCII 字符，确保 matplotlib 正常渲染。"""
+        if not s:
+            return s
+        trans = str.maketrans({
+            "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4",
+            "₅": "5", "₆": "6", "₇": "7", "₈": "8", "₉": "9",
+            "₊": "+", "₋": "-", "₌": "=", "₍": "(", "₎": ")",
+            "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4",
+            "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9",
+            "⁺": "+", "⁻": "-", "⁼": "=", "⁽": "(", "⁾": ")",
+        })
+        return s.translate(trans)
+
     # ── 向量绘图辅助方法 ──
 
     @staticmethod
@@ -1275,6 +1292,9 @@ class MathPlotter(Star):
             vector_list = [v.strip() for v in vectors.split(";") if v.strip()]
             if not vector_list:
                 return "❌ 请提供至少一个向量定义。例如 vectors=\"3,4\""
+            title = self._sanitize_math_text(title)
+            xlabel = self._sanitize_math_text(xlabel)
+            ylabel = self._sanitize_math_text(ylabel)
 
             fig, ax = self._make_figure()
             lw = self._get_config("line_width", 2.0)
@@ -1331,6 +1351,10 @@ class MathPlotter(Star):
             vector_list = [v.strip() for v in vectors.split(";") if v.strip()]
             if not vector_list:
                 return "❌ 请提供至少一个三维向量定义。"
+            title = self._sanitize_math_text(title)
+            xlabel = self._sanitize_math_text(xlabel)
+            ylabel = self._sanitize_math_text(ylabel)
+            zlabel = self._sanitize_math_text(zlabel)
 
             parsed = [self._parse_vector_def_3d(v) for v in vector_list]
             dpi = self._get_config("plot_dpi", 120)
@@ -1369,6 +1393,9 @@ class MathPlotter(Star):
             ylabel(string): y 轴标签
         """
         try:
+            title = self._sanitize_math_text(title)
+            xlabel = self._sanitize_math_text(xlabel)
+            ylabel = self._sanitize_math_text(ylabel)
             p_v1 = self._parse_point(v1)
             p_v2 = self._parse_point(v2)
             v1x, v1y = p_v1
@@ -1436,6 +1463,9 @@ class MathPlotter(Star):
             ylabel(string): y 轴标签
         """
         try:
+            title = self._sanitize_math_text(title)
+            xlabel = self._sanitize_math_text(xlabel)
+            ylabel = self._sanitize_math_text(ylabel)
             px, py = self._parse_point(vector)
             k = float(scalar)
             sx, sy = k * px, k * py
@@ -1493,6 +1523,9 @@ class MathPlotter(Star):
             ylabel(string): y 轴标签
         """
         try:
+            title = self._sanitize_math_text(title)
+            xlabel = self._sanitize_math_text(xlabel)
+            ylabel = self._sanitize_math_text(ylabel)
             s = new_basis.strip()
             # 匹配 (a,b),(c,d) 格式
             pattern = r"\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)"
