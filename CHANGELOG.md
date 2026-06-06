@@ -6,6 +6,18 @@
 
 ---
 
+## [v1.1.1] - 2026-06-06
+
+### 修复
+
+- 补充 `requirements.txt` 缺失的 `plotly` 和 `kaleido` 依赖（感谢 @A-kirami 的 PR [#1](https://github.com/D1ff1culTT/astrbot_plugin_math_plotter/pull/1)）
+
+### 新增
+
+- `CHANGELOG.md` 更新日志文件
+
+---
+
 ## [v1.1.0] - 2026-06-06
 
 ### 新增
